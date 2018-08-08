@@ -1,0 +1,24 @@
+﻿---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EvnetUUID fetch on sendmessage processing
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Moddpd_tools ( file played - break)
+
+case SWITCH_STATUS_BREAK:
+		switch_channel_set_variable(channel, SWITCH_CURRENT_APPLICATION_RESPONSE_VARIABLE, "FILE PLAYED");
+
+Moddpd_tools ( call disconnected while playing )
+playback_function
+	
+case SWITCH_STATUS_FALSE:
+		switch_channel_set_variable(channel, SWITCH_CURRENT_APPLICATION_RESPONSE_VARIABLE, "DISCONNECTED");
+		break;
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+TODO: 
+1. Blind trasnfer always return 0 on execute completed
+
+
+PROBLEMS:
+1. Hanguop Cause at uuid_kill is not set properly to channel
+2. 

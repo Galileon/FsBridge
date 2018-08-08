@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{EAA46464-06CD-4CDE-8568-9C959F103900}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>FsConnect</RootNamespace>
+    <AssemblyName>FsConnect</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AxCommon.Log, Version=1.1.136.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\FsApiView\packages\AxCommon.Log.1.1.136\lib\net452\AxCommon.Log.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\FsApiView\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CallModel\SwitchCall.cs" />
+    <Compile Include="CallModel\SwitchCallCollection.cs" />
+    <Compile Include="Extensions\FreeswitchCallExtensions.cs" />
+    <Compile Include="Extensions\StringExtension.cs" />
+    <Compile Include="Freeswitch.cs" />
+    <Compile Include="FreeswitchClient.cs" />
+    <Compile Include="FreeswitchSocketConnection.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Protocol\Commands\AnswerCommand.cs" />
+    <Compile Include="Protocol\Commands\BlindTransferCommand.cs" />
+    <Compile Include="Protocol\Commands\DisplaceCommand.cs" />
+    <Compile Include="Protocol\Commands\EndBridgeCommand.cs" />
+    <Compile Include="Protocol\Commands\MediaCommand.cs" />
+    <Compile Include="Protocol\Commands\StopDisplaceCommand.cs" />
+    <Compile Include="Protocol\Commands\ThreeWayCommand.cs" />
+    <Compile Include="Protocol\Commands\MuteCommand.cs" />
+    <Compile Include="Protocol\Events\ApiEvent.cs" />
+    <Compile Include="Protocol\AuthRequest.cs" />
+    <Compile Include="Protocol\Events\BackgroundJobEvent.cs" />
+    <Compile Include="Protocol\Commands\BridgeCommand.cs" />
+    <Compile Include="Protocol\Events\BlindTransferCompletedEvent.cs" />
+    <Compile Include="Protocol\Events\CallStateEvent.cs" />
+    <Compile Include="Protocol\Events\ChannelExecuteCompleteEvent.cs" />
+    <Compile Include="Protocol\CommandReply.cs" />
+    <Compile Include="Protocol\Events\DTMFEvent.cs" />
+    <Compile Include="Protocol\EventBase.cs" />
+    <Compile Include="Protocol\FreeswitchMessageBase.cs" />
+    <Compile Include="Protocol\Commands\HangupCommand.cs" />
+    <Compile Include="Protocol\Commands\HoldCommand.cs" />
+    <Compile Include="Protocol\Commands\MakeCallCommand.cs" />
+    <Compile Include="Protocol\MessageRecognizer.cs" />
+    <Compile Include="Protocol\Commands\PlaybackCommand.cs" />
+    <Compile Include="Protocol\Events\RecordCompletedEvent.cs" />
+    <Compile Include="Protocol\Events\PlaybackCompletedEvent.cs" />
+    <Compile Include="Protocol\Commands\RecordCommand.cs" />
+    <Compile Include="Protocol\Commands\RetrieveCommand.cs" />
+    <Compile Include="Protocol\Commands\SendDtmfCommand.cs" />
+    <Compile Include="Protocol\Commands\SetCommand.cs" />
+    <Compile Include="Protocol\Commands\StopPlaybackCommand.cs" />
+    <Compile Include="Protocol\Commands\StopRecordCommand.cs" />
+    <Compile Include="Switch\Switch.cs" />
+    <Compile Include="Switch\SwitchClient.cs" />
+    <Compile Include="Switch\SwitchClientEvents.cs" />
+    <Compile Include="Switch\SwitchClientSettings.cs" />
+    <Compile Include="Switch\SwitchConnectionSettings.cs" />
+    <Compile Include="Util\CommandResponseHandler.cs" />
+    <Compile Include="Switch\SwitchCallDigitBuffers.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Fs_Modifications.txt" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
