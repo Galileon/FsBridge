@@ -8,12 +8,31 @@ namespace FsConnect
 {
     public class SwitchClientSettings
     {
-        
+
         #region Trace Log
 
         public bool TraceEnabled { get; set; }
 
         public string TraceFilePath { get; set; }
+
+        #endregion
+
+        #region Http File Server
+        
+        /// <summary>
+        /// Root for audio prompts to be served via built in http server 
+        /// </summary>
+        public string AudioPromptsRoot { get; set; }
+
+        /// <summary>
+        /// Root for audio prompts to be served via built in http server 
+        /// </summary>
+        public string AudioRecordingsRoot { get; set; }
+                
+        /// <summary>
+        /// Url for audio http server
+        /// </summary>
+        public string AudioHttpServerUrl { get; set; }
 
         #endregion
 
@@ -59,7 +78,7 @@ namespace FsConnect
                 {
                     foreach (var pn in c.IncomingContexts.Split(' ', ',', ';'))
                     {
-                        if (!Context.ContainsKey (c.SwitchId)) Context[c.SwitchId] = new List<string>();
+                        if (!Context.ContainsKey(c.SwitchId)) Context[c.SwitchId] = new List<string>();
                         Context[c.SwitchId].Add(pn.Trim());
                     }
                 });

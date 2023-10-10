@@ -17,11 +17,7 @@ namespace FsConnect.Protocol
                      $"execute-app-arg: {destCallId}";
              */
 
-            
-
             return $"bgapi uuid_bridge {CallId} {destCallId}";
-
-
         }
 
         public static string Encode(Guid CallId, Guid destCallId, Guid thirdCallId)
