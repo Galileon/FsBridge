@@ -41,37 +41,30 @@ namespace FsBridge
             //base.OptionReceiveBufferSize = 32;
             base.OptionTcpKeepAliveRetryCount = 16;
             base.ConnectAsync();
-
 #if DEBUG
             if (File.Exists (DumpFilePath)) File.Delete (DumpFilePath);
 #endif
-
         }
-
         protected override void OnConnecting()
         {
             SetClientState(EventSocketClientState.Connecting);
             base.OnConnecting();
         }
-
         protected override void OnConnected()
         {
             SetClientState(EventSocketClientState.Connected);
             base.OnConnected();
         }
-
         protected override void OnDisconnected()
         {
             SetClientState(EventSocketClientState.Closed);
             base.OnDisconnected();
         }
-
         protected override void OnDisconnecting()
         {
             SetClientState(EventSocketClientState.Closing);
             base.OnDisconnecting();
         }
-
         protected override void OnReceived(byte[] buffer, long offset, long size)
         {
             
@@ -110,13 +103,38 @@ namespace FsBridge
                                 case EventType.Reschedule:
                                     OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<RescheduleEvent>(msg));
                                     break;
+                                case EventType.ChannelCreate:
+                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelCreateEvent>(msg));
+                                    break;
+                                case EventType.ChannelCallState:
+                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelCallStateEvent>(msg));
+                                    break;
+                                case EventType.ChannelState:
+                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelStateEvent>(msg));
+                                    break;
+                                case EventType.ChannelDestroy:
+                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelDestroyEvent>(msg));
+                                    break;
+                                case EventType.ChannelHangup:
+                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelHangupEvent>(msg));
+                                    break;
+                                case EventType.ChannelHangupComplete:
+                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelHangupCompleteEvent>(msg));
+                                    break;
+                                case EventType.PresenceIn:
+                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<PresenceInEvent>(msg));
+                                    break;
+
+                                default:
+                                    Console.WriteLine("Uknown event!");
+                                    break;
                             }
                             break;
                     }
                 }
                 catch (Exception xce)
                 {
-                    Console.WriteLine("EX");
+                    Console.WriteLine("EX" + xce.Message);
                 }
             }
             

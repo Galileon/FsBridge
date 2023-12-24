@@ -27,12 +27,22 @@ namespace FsBridge.Helpers
         Reschedule,
         [EnumMember(Value = "CHANNEL_CALLSTATE")]
         ChannelCallState,
+        [EnumMember(Value = "CHANNEL_STATE")]
+        ChannelState,
         [EnumMember(Value = "DTMF")]
         DtmfEvent,
+        [EnumMember(Value = "CHANNEL_CREATE")]
+        ChannelCreate,
+        [EnumMember(Value = "CHANNEL_HANGUP")]
+        ChannelHangup,
+        [EnumMember(Value = "CHANNEL_DESTROY")]
+        ChannelDestroy,
         [EnumMember(Value = "CHANNEL_EXECUTE")]
         ChannelExecute,
         [EnumMember(Value = "CHANNEL_EXECUTE_COMPLETE")]
         ChannelExecuteCompleteEvent,
+        [EnumMember(Value = "CHANNEL_HANGUP_COMPLETE")]
+        ChannelHangupComplete,
         /// <summary>
         /// Used for command reply 
         /// </summary>
@@ -46,10 +56,11 @@ namespace FsBridge.Helpers
         ApiEvent,
         [EnumMember(Value = "BACKGROUND_JOB")]
         BackgroundEvent,
-
+        [EnumMember(Value = "PRESENCE_IN")]
+        PresenceIn,
     }
 
-
+    
     public class MessageParser
     {
         NetCoreServer.Buffer _receiveBuffer = new NetCoreServer.Buffer();
