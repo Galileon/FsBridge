@@ -339,3 +339,8 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database 
 healthchecksdb
+/FsBridge.FsClient/bin
+/FsBridge.FsClient/obj
+/FsBridge.FsClient/.vs
+/FsBridge.ConsoleApp/bin
+/FsBridge.ConsoleApp/obj
