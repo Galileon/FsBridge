@@ -13,18 +13,18 @@ using NetCoreServer;
 
 namespace FsBridge.FsClient
 {
-
     public class EventSocketClient : TcpClient
     {
         static string DumpFilePath = "d:\\fsbridgedump.txt";
 
-        public delegate void OnStateChangedDelegate(EventSocketClientState state, EventSocketClientState previousState);
-        public delegate void OnEventDelegate(EventBase evnt);
+        public delegate void OnStateChangedDelegate(EventSocketClient client, EventSocketClientState state, EventSocketClientState previousState);
+        public delegate void OnEventDelegate(EventSocketClient client,EventBase evnt);
         public event OnEventDelegate OnEvent;
-        public event OnStateChangedDelegate OnStateChanged; 
+        public event OnStateChangedDelegate OnStateChanged;
         MessageParser _msgParser = new MessageParser();
         EventSocketClientState _state = EventSocketClientState.Closed;
         System.Timers.Timer _reconnectTimer;
+        string _login, _pass;
         bool _disconnectRequired = false;
         public EventSocketClientState State
         {
@@ -37,13 +37,14 @@ namespace FsBridge.FsClient
                 }
             }
         }
-        public EventSocketClient(string address, int port) : base(address, port)
+        public EventSocketClient(string address, int port, string pass) : base(address, port)
         {
+            (_pass) = (pass);
             base.OptionKeepAlive = true;
             base.OptionNoDelay = true;
             base.OptionTcpKeepAliveRetryCount = 16;
 #if DEBUG
-            if (File.Exists (DumpFilePath)) File.Delete (DumpFilePath);
+            if (File.Exists(DumpFilePath)) File.Delete(DumpFilePath);
 #endif
         }
 
@@ -86,7 +87,7 @@ namespace FsBridge.FsClient
         }
         protected override void OnReceived(byte[] buffer, long offset, long size)
         {
-            _Trace("Receive",Encoding.UTF8.GetString(buffer, (int)offset, (int)size));
+            _Trace("Receive", Encoding.UTF8.GetString(buffer, (int)offset, (int)size));
             _msgParser.Append(new ArraySegment<byte>(buffer, (int)offset, (int)size));
             while (_msgParser.ReadMessage(out var msg, out var msgType))
             {
@@ -96,7 +97,7 @@ namespace FsBridge.FsClient
                     {
                         case MessageType.AuthRequest:
                             SetClientState(EventSocketClientState.Authenticating);
-                            SendCommand(new AuthenticateCommand() { Password = "ClueCon" });
+                            SendCommand(new AuthenticateCommand() { Password = _pass });
                             break;
                         case MessageType.CommandReply:
                             if (this._state == EventSocketClientState.Authenticating)
@@ -105,16 +106,18 @@ namespace FsBridge.FsClient
                                 if (authResponse.Result == CommandReplyResult.Ok)
                                 {
                                     SetClientState(EventSocketClientState.Settings);
-                                    SendCommand(new EventCommand() { });
+                                    SendCommand(new EventCommand());
                                 }
-                            }else
+                            }
+                            else
                             if (this._state == EventSocketClientState.Settings)
                             {
                                 var authResponse = MessageParser.GetCommandReply(msg);
                                 if (authResponse.Result == CommandReplyResult.Ok)
                                 {
                                     SetClientState(EventSocketClientState.Receiving);
-                                }else
+                                }
+                                else
                                 {
                                     SetClientState(EventSocketClientState.SettingsFailed);
                                     // TODO: what?
@@ -125,40 +128,46 @@ namespace FsBridge.FsClient
                             switch (Newtonsoft.Json.JsonConvert.DeserializeObject<EventBase>(msg).EventName)
                             {
                                 case EventType.Heartbeat:
-                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<HeartbeatEvent>(msg));
+                                    OnEvent?.Invoke(this,Newtonsoft.Json.JsonConvert.DeserializeObject<HeartbeatEvent>(msg));
                                     break;
                                 case EventType.Reschedule:
-                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<RescheduleEvent>(msg));
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<RescheduleEvent>(msg));
                                     break;
                                 case EventType.ChannelCreate:
-                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelCreateEvent>(msg));
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelCreateEvent>(msg));
+                                    break;
+                                case EventType.ChannelExecute:
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelExecuteEvent>(msg));
                                     break;
                                 case EventType.ChannelCallState:
-                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelCallStateEvent>(msg));
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelCallStateEvent>(msg));
                                     break;
                                 case EventType.ChannelState:
-                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelStateEvent>(msg));
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelStateEvent>(msg));
                                     break;
                                 case EventType.ChannelDestroy:
-                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelDestroyEvent>(msg));
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelDestroyEvent>(msg));
                                     break;
                                 case EventType.ChannelHangup:
-                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelHangupEvent>(msg));
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelHangupEvent>(msg));
                                     break;
                                 case EventType.ChannelHangupComplete:
-                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelHangupCompleteEvent>(msg));
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelHangupCompleteEvent>(msg));
                                     break;
                                 case EventType.PresenceIn:
-                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<PresenceInEvent>(msg));
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<PresenceInEvent>(msg));
                                     break;
                                 case EventType.Custom:
-                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<CustomEvent>(msg));
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<CustomEvent>(msg));
                                     break;
                                 case EventType.ChannelAnswer:
-                                    OnEvent?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelAnswerEvent>(msg));
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelAnswerEvent>(msg));
+                                    break;
+                                case EventType.BackgroundJobEvent:
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<BackgroundJobEvent>(msg));
                                     break;
                                 default:
-                                    Console.WriteLine("Uknown event!");
+                                    ///Console.WriteLine("Uknown event!");
                                     break;
                             }
                             break;
@@ -166,35 +175,32 @@ namespace FsBridge.FsClient
                 }
                 catch (Exception xce)
                 {
-                    Console.WriteLine("EX" + xce.Message);
+                    //Console.WriteLine("EX" + xce.Message);
                 }
             }
-            
             base.OnReceived(buffer, offset, size);
         }
-
         internal void SetClientState(EventSocketClientState state)
         {
             if (_state != state)
             {
                 var prevState = _state;
                 this._state = state;
-                OnStateChanged?.Invoke(state, prevState);
+                OnStateChanged?.Invoke(this,state, prevState);
             }
         }
-
-        internal bool SendCommand(CommandBase command)
+        public bool SendCommand(CommandBase command)
         {
             var cmd = command.EncodeCommand();
-            _Trace("Snd",cmd);
+            _Trace("Snd", cmd);
             return base.SendAsync(Encoding.UTF8.GetBytes(cmd));
         }
 
-        void _Trace (string operation, string msg)
+        void _Trace(string operation, string msg)
         {
 #if DEBUG
-            File.AppendAllText(DumpFilePath,$"-------------------------------------------------------------------------------------------{Environment.NewLine}");
-            File.AppendAllText(DumpFilePath,$"{operation}{Environment.NewLine}{msg}");
+            File.AppendAllText(DumpFilePath, $"-------------------------------------------------------------------------------------------{Environment.NewLine}");
+            File.AppendAllText(DumpFilePath, $"{operation}{Environment.NewLine}{msg}");
 #endif
         }
     }

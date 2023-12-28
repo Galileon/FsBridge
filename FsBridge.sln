@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FsBridge.FsClient", "FsBrid
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FsBridge.ConsoleApp", "FsBridge.ConsoleApp\FsBridge.ConsoleApp.csproj", "{F15B0BD5-7A56-4AF3-8F11-EE832B16EA83}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FsBridge.WpfClient", "FsBridge.WpfClient\FsBridge.WpfClient.csproj", "{DB4C5760-8862-4E8D-96FD-2881261B7EDC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{F15B0BD5-7A56-4AF3-8F11-EE832B16EA83}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F15B0BD5-7A56-4AF3-8F11-EE832B16EA83}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F15B0BD5-7A56-4AF3-8F11-EE832B16EA83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB4C5760-8862-4E8D-96FD-2881261B7EDC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB4C5760-8862-4E8D-96FD-2881261B7EDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB4C5760-8862-4E8D-96FD-2881261B7EDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB4C5760-8862-4E8D-96FD-2881261B7EDC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

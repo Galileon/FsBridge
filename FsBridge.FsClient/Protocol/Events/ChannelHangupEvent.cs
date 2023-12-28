@@ -74,13 +74,13 @@ namespace FsBridge.FsClient.Protocol.Events
         public string ChannelPresenceID { get; set; }
 
         [JsonProperty("Channel-Call-UUID")]
-        public string ChannelCallUUID { get; set; }
+        public Guid ChannelCallUUID { get; set; }
 
         [JsonProperty("Answer-State")]
         public string AnswerState { get; set; }
 
         [JsonProperty("Hangup-Cause")]
-        public string HangupCause { get; set; }
+        public FsEventCause? HangupCause { get; set; }
 
         [JsonProperty("Caller-Direction")]
         public string CallerDirection { get; set; }

@@ -7,6 +7,25 @@ using System.Threading.Tasks;
 
 namespace FsBridge.FsClient.Protocol
 {
+    public enum FsCommandType 
+    {
+        /// <summary>
+        /// Auth, event etc.
+        /// </summary>
+        Raw,
+        /// <summary>
+        /// Send a FreeSWITCH API command, blocking mode. That is, the FreeSWITCH instance won't accept any new commands until the api command finished execution.
+        /// </summary>
+        Api,
+        /// <summary>
+        /// Send a FreeSWITCH API command, non-blocking mode. This will let you execute a job in the background, and the result will be sent as an event with an indicated UUID to match the reply to the command.
+        /// </summary>
+        BgApi,
+        /// <summary>
+        /// is used to control the behavior of FreeSWITCH. UUID is mandatory, and it refers to a specific call (i.e., a channel or call leg or session; see Call Legs and Creating a New Endpoint: Lifecycle of a Session).
+        /// </summary>
+        SendMsg
+    }
     public enum EventSocketClientState
     {
         Closed,
@@ -39,6 +58,36 @@ namespace FsBridge.FsClient.Protocol
         Hangup,
         [EnumMember(Value = "UNHELD")]
         Unheld
+    }
+    public enum FsChannelState {
+        [EnumMember(Value = "CS_NEW")]
+        New,
+        [EnumMember(Value = "CS_INIT")]
+        Init,
+        [EnumMember(Value = "CS_ROUTING")]
+        Routing,
+        [EnumMember(Value = "CS_SOFT_EXECUTE")]
+        SoftExecute,
+        [EnumMember(Value = "CS_EXECUTE")]
+        Execute,
+        [EnumMember(Value = "CS_EXCHANGE_MEDIA")]
+        ExchangeMedia,
+        [EnumMember(Value = "CS_PARK")]
+        Park,
+        [EnumMember(Value = "CS_CONSUME_MEDIA")]
+        ConsumeMedia,
+        [EnumMember(Value = "CS_HIBERNATE")]
+        Hibernate,
+        [EnumMember(Value = "CS_RESET")]
+        Reset,
+        [EnumMember(Value = "CS_HANGUP")]
+        Hangup,
+        [EnumMember(Value = "CS_REPORTING")]
+        Reporting,
+        [EnumMember(Value = "CS_DESTROY")]
+        Destroy,
+        [EnumMember(Value = "DOWN")]
+        None,
     }
     public enum FsCallDirection
     {
@@ -517,4 +566,10 @@ namespace FsBridge.FsClient.Protocol
 
         #endregion Global Failure Responses
     }
+    public enum AudioStreamDestination
+    {
+        Both,
+        ALeg,
+    }
+
 }

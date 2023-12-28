@@ -10,5 +10,6 @@ namespace FsBridge.FsClient.Protocol.Commands
     {
         public string Password { get; set; }
         protected override string Encode() => $"auth {Password}";
+        protected override FsCommandType CommandType => FsCommandType.Raw;
     }
 }

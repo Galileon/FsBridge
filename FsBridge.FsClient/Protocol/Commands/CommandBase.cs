@@ -6,13 +6,24 @@ using System.Threading.Tasks;
 
 namespace FsBridge.FsClient.Protocol.Commands
 {
-    internal abstract class CommandBase
+    public abstract class CommandBase
     {
         public Guid UUID { get; private set; } = Guid.NewGuid();
         protected abstract string Encode();
+        protected abstract FsCommandType CommandType { get; }
         public string EncodeCommand()
         {
-            return $"{Encode()}\nJob-UUID: {UUID}\n\n";
+            switch (CommandType)
+            {
+                case FsCommandType.SendMsg:
+                    return $"sendmsg {Encode()}\nEvent-UUID: {UUID}\n\n";
+                case FsCommandType.Api:
+                    return $"api {Encode()}\nEvent-UUID: {UUID}\n\n";
+                case FsCommandType.BgApi:
+                    return $"bgapi {Encode()}\nJob-UUID: {UUID}\n\n";
+                default:
+                    return $"{Encode()}\n\n";
+            }
         }
     }
 }

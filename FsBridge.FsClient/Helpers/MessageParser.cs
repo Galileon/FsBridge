@@ -57,7 +57,7 @@ namespace FsBridge.Helpers
         [EnumMember(Value = "API")]
         ApiEvent,
         [EnumMember(Value = "BACKGROUND_JOB")]
-        BackgroundEvent,
+        BackgroundJobEvent,
         [EnumMember(Value = "PRESENCE_IN")]
         PresenceIn,
         [EnumMember(Value = "CUSTOM")]
