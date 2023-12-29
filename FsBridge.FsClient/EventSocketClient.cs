@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using FsBridge.FsClient.Helpers;
 using FsBridge.FsClient.Protocol;
 using FsBridge.FsClient.Protocol.Commands;
 using FsBridge.FsClient.Protocol.Events;
@@ -18,10 +20,11 @@ namespace FsBridge.FsClient
         static string DumpFilePath = "d:\\fsbridgedump.txt";
 
         public delegate void OnStateChangedDelegate(EventSocketClient client, EventSocketClientState state, EventSocketClientState previousState);
-        public delegate void OnEventDelegate(EventSocketClient client,EventBase evnt);
+        public delegate void OnEventDelegate(EventSocketClient client, EventBase evnt);
         public event OnEventDelegate OnEvent;
         public event OnStateChangedDelegate OnStateChanged;
         MessageParser _msgParser = new MessageParser();
+        RequestResponsePool _requestPool = new RequestResponsePool();
         EventSocketClientState _state = EventSocketClientState.Closed;
         System.Timers.Timer _reconnectTimer;
         string _login, _pass;
@@ -100,6 +103,17 @@ namespace FsBridge.FsClient
                             SendCommand(new AuthenticateCommand() { Password = _pass });
                             break;
                         case MessageType.CommandReply:
+
+                            if (this._state == EventSocketClientState.Receiving)
+                            {
+                                var commandReply = MessageParser.GetCommandReply(msg);
+                                if (commandReply.UUID.HasValue)
+                                {
+
+                                }
+
+                            }
+
                             if (this._state == EventSocketClientState.Authenticating)
                             {
                                 var authResponse = MessageParser.GetCommandReply(msg);
@@ -128,7 +142,7 @@ namespace FsBridge.FsClient
                             switch (Newtonsoft.Json.JsonConvert.DeserializeObject<EventBase>(msg).EventName)
                             {
                                 case EventType.Heartbeat:
-                                    OnEvent?.Invoke(this,Newtonsoft.Json.JsonConvert.DeserializeObject<HeartbeatEvent>(msg));
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<HeartbeatEvent>(msg));
                                     break;
                                 case EventType.Reschedule:
                                     OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<RescheduleEvent>(msg));
@@ -163,6 +177,9 @@ namespace FsBridge.FsClient
                                 case EventType.ChannelAnswer:
                                     OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelAnswerEvent>(msg));
                                     break;
+                                case EventType.ChannelPark:
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelParkEvent>(msg));
+                                    break;
                                 case EventType.BackgroundJobEvent:
                                     OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<BackgroundJobEvent>(msg));
                                     break;
@@ -186,16 +203,21 @@ namespace FsBridge.FsClient
             {
                 var prevState = _state;
                 this._state = state;
-                OnStateChanged?.Invoke(this,state, prevState);
+                OnStateChanged?.Invoke(this, state, prevState);
             }
         }
         public bool SendCommand(CommandBase command)
         {
             var cmd = command.EncodeCommand();
             _Trace("Snd", cmd);
-            return base.SendAsync(Encoding.UTF8.GetBytes(cmd));
+            _requestPool.AppendRequest(command.UUID, command.GetType());
+            if (!base.SendAsync(Encoding.UTF8.GetBytes(cmd)))
+            {
+                _requestPool.RemoveRequest(command.UUID);
+                return false;
+            }
+            return true;
         }
-
         void _Trace(string operation, string msg)
         {
 #if DEBUG

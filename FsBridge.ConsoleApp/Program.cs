@@ -37,6 +37,7 @@ namespace FsBridge.ConsoleApp
                 if (cCse.ChannelCallState == FsCallState.Ringing && cCse.CallDirection == FsCallDirection.Inbound && cCse.CallerDestinationNumber == "77777")
                 {
                     client.SendCommand(new AnswerCommand(cCse.ChannelCallUUID));
+                    //client.SendCommand(new AnswerCommand(Guid.NewGuid  ()));
                 }
 
                 if (cCse.ChannelCallState == FsCallState.Active)

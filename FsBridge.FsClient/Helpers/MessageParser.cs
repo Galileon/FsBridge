@@ -41,6 +41,8 @@ namespace FsBridge.Helpers
         ChannelDestroy,
         [EnumMember(Value = "CHANNEL_EXECUTE")]
         ChannelExecute,
+        [EnumMember(Value = "CHANNEL_PARK")]
+        ChannelPark,
         [EnumMember(Value = "CHANNEL_EXECUTE_COMPLETE")]
         ChannelExecuteCompleteEvent,
         [EnumMember(Value = "CHANNEL_HANGUP_COMPLETE")]
@@ -64,7 +66,7 @@ namespace FsBridge.Helpers
         Custom,
     }
 
-    
+
     public class MessageParser
     {
         NetCoreServer.Buffer _receiveBuffer = new NetCoreServer.Buffer();
@@ -81,21 +83,23 @@ namespace FsBridge.Helpers
 
             if (messageParts.Length > 1 && messageParts[0].StartsWith("Content-Length"))
             {
-                contentLenght = Int32.Parse(MessageParser.GetStringParameter (messageParts[0]).Trim());
+                contentLenght = Int32.Parse(MessageParser.GetStringParameter(messageParts[0]).Trim());
                 contentTypeIndex = 1; // For sized content it will be there 
             }
             if (messageParts[contentTypeIndex] == "Content-Type: auth/request") return MessageType.AuthRequest;
             if (messageParts[contentTypeIndex] == "Content-Type: command/reply") return MessageType.CommandReply;
             return MessageType.Event;
         }
-        public static CommandReply GetCommandReply (string content)
+        public static CommandReply GetCommandReply(string content)
         {
+            var ret = new CommandReply() { Result = CommandReplyResult.Failed };
             var lines = content.Split("\n");
             if (lines.Count() < 2) throw new Exception("Expected at least 2 lines at command reply.");
-            if (lines[1].Contains ("+OK")) return new CommandReply () {  Result = CommandReplyResult.Ok, Text = GetStringParameter(lines[1]) };
-            return new CommandReply() { Result = CommandReplyResult.Failed, Text = GetStringParameter (lines[1]) };
+            if (lines[1].Contains("+OK")) ret = new CommandReply() { Result = CommandReplyResult.Ok, Text = GetStringParameter(lines[1]) };
+            if (lines.Count() > 2 && lines[2].StartsWith("Job-UUID")) ret.UUID = Guid.Parse(GetStringParameter(lines[2]));
+            return ret;
         }
-        public static string GetStringParameter (string content)
+        public static string GetStringParameter(string content)
         {
             var idx = content.IndexOf(':');
             if (idx == -1) return content;
@@ -104,21 +108,21 @@ namespace FsBridge.Helpers
         }
         #endregion
 
-        public void Append (ArraySegment<byte> buffer)
+        public void Append(ArraySegment<byte> buffer)
         {
             _lastSegment = buffer;
-            _receiveBuffer.Append (_lastSegment);
+            _receiveBuffer.Append(_lastSegment);
         }
         internal bool ReadMessage(out string msg, out MessageType? msgType)
         {
             msgType = MessageType.Event;
             msg = string.Empty;
 
-            if (_receiveBuffer.Size == 0) return false; 
+            if (_receiveBuffer.Size == 0) return false;
             if (!BufferHelper.HasCompletedSegment(_lastSegment)) return false;
             if (!BufferHelper.FetchMessageSegment(_receiveBuffer, _expectedSegmentSize, out msg)) return false;
             if (_expectedSegmentSize.HasValue) // we have had declared segment and we fetched succsfully
-            { 
+            {
                 _expectedSegmentSize = null;
                 return true;
             }

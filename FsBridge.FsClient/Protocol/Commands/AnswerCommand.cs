@@ -11,6 +11,8 @@ namespace FsBridge.FsClient.Protocol.Commands
         public Guid CallId { get; set; }
         protected override FsCommandType CommandType => FsCommandType.BgApi;
         public AnswerCommand(Guid callId) => (CallId) = (callId);
-        protected override string Encode() =>  $"uuid_answer {CallId}";
+        //protected override string Encode() =>  $"uuid_answer {CallId}";
+        protected override string Encode() =>
+           $"uuid_answer {CallId}";
     }
 }

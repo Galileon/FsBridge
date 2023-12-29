@@ -8,6 +8,6 @@ namespace FsBridge.FsClient.Protocol.Commands
 {
     public class ResponseBase
     {
-        public Guid? UUID { get; private set; }
+        public Guid? UUID { get; set; }
     }
 }
