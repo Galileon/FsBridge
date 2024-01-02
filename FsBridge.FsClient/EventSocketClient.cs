@@ -107,11 +107,7 @@ namespace FsBridge.FsClient
                             if (this._state == EventSocketClientState.Receiving)
                             {
                                 var commandReply = MessageParser.GetCommandReply(msg);
-                                if (commandReply.UUID.HasValue)
-                                {
-
-                                }
-
+                                if (commandReply.UUID.HasValue && commandReply.Result == CommandReplyResult.Failed) RaiseResponse(commandReply);
                             }
 
                             if (this._state == EventSocketClientState.Authenticating)
@@ -197,6 +193,17 @@ namespace FsBridge.FsClient
             }
             base.OnReceived(buffer, offset, size);
         }
+        private void RaiseResponse(CommandReply commandReply)
+        {
+            if (_requestPool.RemoveRequest(commandReply.UUID.Value, out var _rec))
+            {
+                //_invoker.Invoke(commandReply.UUID, () => ProcessResponse(commandReply));
+            }
+        }
+        private void ProcessResponse (CommandReply commandReply)
+        {
+
+        }
         internal void SetClientState(EventSocketClientState state)
         {
             if (_state != state)
@@ -213,7 +220,12 @@ namespace FsBridge.FsClient
             _requestPool.AppendRequest(command.UUID, command.GetType());
             if (!base.SendAsync(Encoding.UTF8.GetBytes(cmd)))
             {
-                _requestPool.RemoveRequest(command.UUID);
+                _requestPool.RemoveRequest(command.UUID, out var entry);
+                if (entry.CallBack != null)
+                {
+
+                    return true;
+                }
                 return false;
             }
             return true;
@@ -221,7 +233,7 @@ namespace FsBridge.FsClient
         void _Trace(string operation, string msg)
         {
 #if DEBUG
-            File.AppendAllText(DumpFilePath, $"-------------------------------------------------------------------------------------------{Environment.NewLine}");
+            File.AppendAllText(DumpFilePath, $"------------------------------------------------------------------------------------------- {Environment.NewLine}");
             File.AppendAllText(DumpFilePath, $"{operation}{Environment.NewLine}{msg}");
 #endif
         }

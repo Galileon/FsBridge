@@ -8,9 +8,9 @@ namespace FsBridge.FsClient
 {
     public class FreeswitchConfiguration
     {
-        public string Password { get; set; }
-        public string Address { get; set; }
-        public int Port { get; set; }
+        public string Password { get; set; } = "ClueCon";
+        public string Address { get; set; } = "127.0.0.1";
+        public int Port { get; set; } = 8021;
         /// <summary>
         /// Profile context - leave empty if we want to see everything
         /// </summary>

@@ -1,7 +1,9 @@
 ﻿using FsBridge.FsClient;
+using FsBridge.FsClient.Helpers;
 using FsBridge.FsClient.Protocol;
 using FsBridge.FsClient.Protocol.Commands;
 using FsBridge.FsClient.Protocol.Events;
+using System.Runtime.CompilerServices;
 
 namespace FsBridge.ConsoleApp
 {
@@ -9,11 +11,25 @@ namespace FsBridge.ConsoleApp
     {
         static void Main(string[] args)
         {
-            var fs = new FsBridge.FsClient.EventSocketClient("127.0.0.1", 8021, "ClueCon");
-            fs.OnEvent += Fs_OnEvent;
-            fs.OnStateChanged += Fs_OnStateChanged;
-            fs.ConnectAsync();
+            var fs = new FreeswitchClient(new FreeswitchConfiguration(),null);
+            fs.OnChannelCallState += Fs_OnChannelCallState;
+            fs.OnStateChanged += Fs_OnStateChanged1;
+            fs.Connect();
+
+            //fs.OnEvent += Fs_OnEvent;//
+            //fs.OnStateChanged += Fs_OnStateChanged;
+            //fs.ConnectAsync();
             Console.ReadKey();
+        }
+
+        private static void Fs_OnStateChanged1(FreeswitchClient client, EventSocketClientState state, EventSocketClientState previousState)
+        {
+            Console.WriteLine($"Fs_OnStateChanged {state} Prev: {previousState}");
+        }
+
+        private static void Fs_OnChannelCallState(FreeswitchClient client, ChannelCallStateEvent callState)
+        {
+            Console.WriteLine($"{callState} {callState.CallDirection} {callState.CallerANI} {callState.CallerDestinationNumber} {callState.ChannelCallState} {callState.ChannelState}");
         }
         private static void Fs_OnStateChanged(EventSocketClient client, EventSocketClientState state, EventSocketClientState previousState)
         {
