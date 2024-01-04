@@ -86,7 +86,7 @@ namespace FsBridge.FsClient
         public void Close()
         {
             _disconnectRequired = true;
-            this.Close();
+            base.Disconnect();
         }
         protected override void OnReceived(byte[] buffer, long offset, long size)
         {

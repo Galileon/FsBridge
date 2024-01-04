@@ -11,14 +11,10 @@ namespace FsBridge.ConsoleApp
     {
         static void Main(string[] args)
         {
-            var fs = new FreeswitchClient(new FreeswitchConfiguration(),null);
+            var fs = new FreeswitchClient(new FreeswitchConfiguration(), null);
             fs.OnChannelCallState += Fs_OnChannelCallState;
             fs.OnStateChanged += Fs_OnStateChanged1;
             fs.Connect();
-
-            //fs.OnEvent += Fs_OnEvent;//
-            //fs.OnStateChanged += Fs_OnStateChanged;
-            //fs.ConnectAsync();
             Console.ReadKey();
         }
 
@@ -30,10 +26,6 @@ namespace FsBridge.ConsoleApp
         private static void Fs_OnChannelCallState(FreeswitchClient client, ChannelCallStateEvent callState)
         {
             Console.WriteLine($"{callState} {callState.CallDirection} {callState.CallerANI} {callState.CallerDestinationNumber} {callState.ChannelCallState} {callState.ChannelState}");
-        }
-        private static void Fs_OnStateChanged(EventSocketClient client, EventSocketClientState state, EventSocketClientState previousState)
-        {
-            Console.WriteLine($"StateChanged: {state}");
         }
         private static void Fs_OnEvent(EventSocketClient client, EventBase evnt)
         {
@@ -58,9 +50,8 @@ namespace FsBridge.ConsoleApp
 
                 if (cCse.ChannelCallState == FsCallState.Active)
                 {
-                    client.SendCommand(new PlaybackCommand (cCse.ChannelCallUUID, "d:\\1.wav"));
+                    client.SendCommand(new PlaybackCommand(cCse.ChannelCallUUID, "d:\\1.wav"));
                 }
-
             }
         }
     }

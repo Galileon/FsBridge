@@ -12,4 +12,8 @@
     <PackageReference Include="Catel.MVVM" Version="6.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\FsBridge.FsClient\FsBridge.FsClient.csproj" />
+  </ItemGroup>
+
 </Project>
