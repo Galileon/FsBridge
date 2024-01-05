@@ -4,7 +4,9 @@
              xmlns:local="clr-namespace:FsBridge.WpfClient"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+        <SolidColorBrush x:Key="RedBrush" Color="#D24905"/>
         <SolidColorBrush x:Key="GreenBrush" Color="#498205"/>
         <SolidColorBrush x:Key="WhiteBrush" Color="#DDDDDD"/>
+        <SolidColorBrush x:Key="GrayBrush" Color="#CCCCCC"/>
     </Application.Resources>
 </Application>

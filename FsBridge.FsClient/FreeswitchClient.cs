@@ -1,4 +1,6 @@
 ﻿using FsBridge.FsClient.Helpers;
+using FsBridge.FsClient.Protocol;
+using FsBridge.FsClient.Protocol.Commands;
 using FsBridge.FsClient.Protocol.Events;
 using Microsoft.Extensions.Logging;
 using System;
@@ -17,6 +19,7 @@ namespace FsBridge.FsClient
         private MultiActionInvoker _invoker = new MultiActionInvoker();
         public event OnChannelCallStateEventDelegate OnChannelCallState;
         public event OnStateChangedDelegate OnStateChanged;
+        public Protocol.EventSocketClientState State { get => _eClient?.State ?? Protocol.EventSocketClientState.Closed; }
         public FreeswitchClient(FreeswitchConfiguration config, ILogger logger)
         {
             Configuration = config;
@@ -34,7 +37,7 @@ namespace FsBridge.FsClient
             switch (evnt)
             {
                 case ChannelCallStateEvent ccse:
-                    if (OnChannelCallState != null) _invoker.Invoke(ccse.ChannelCallUUID, () => OnChannelCallState (this, ccse));
+                    if (OnChannelCallState != null &&  Configuration.Context.ToLower().Contains (ccse.CallerContext.ToLower())) _invoker.Invoke(ccse.ChannelCallUUID, () => OnChannelCallState (this, ccse));
                     break;
             }
         }
@@ -42,11 +45,14 @@ namespace FsBridge.FsClient
         {
             if (!_eClient.ConnectAsync()) throw new Exception("Cannot connect.");
         }
-
         public void Close()
         {
             _invoker.Stop();
             _eClient?.Close();
         }
+
+
+        public bool HangupCall (Guid callId, FsEventCause cause = FsEventCause.NORMAL_CLEARING) => _eClient.SendCommand(new HangupCommand(callId,cause));
+
     }
 }

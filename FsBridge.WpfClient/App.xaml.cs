@@ -14,7 +14,7 @@ namespace FsBridge.WpfClient
     {
         public App()
         {
-            ServiceLocator.Default.RegisterInstance<FsClient.FreeswitchClient>(new FsClient.FreeswitchClient(new FsClient.FreeswitchConfiguration(), null));
+            ServiceLocator.Default.RegisterInstance<FsClient.FreeswitchClient>(new FsClient.FreeswitchClient(new FsClient.FreeswitchConfiguration() {  Context = "mediaproxy"}, null));
         }
 
         protected override void OnExit(ExitEventArgs e)

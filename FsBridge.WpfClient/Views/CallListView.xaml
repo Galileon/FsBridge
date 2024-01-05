@@ -4,10 +4,43 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:c="http://schemas.catelproject.com"
+             xmlns:conv="clr-namespace:FsBridge.WpfClient.Converters"
              xmlns:ViewModels="clr-namespace:FsBridge.WpfClient.ViewModels"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <DataGrid ItemsSource="{Binding Calls}"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto" MinWidth="50"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <DataGrid IsReadOnly="True" ItemsSource="{Binding Calls}" SelectedItem="{Binding SelectedCall}"/>
+
+        <ListView ItemsSource="{Binding SelectedCall.Events}" Grid.Column="1" SelectedItem="{Binding SelectedEvent}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="{Binding EventName}"/>
+                        <TextBlock Text="{Binding EventDateLocal}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <ScrollViewer  Grid.Column="2">
+            <TextBlock Text="{Binding SelectedEvent,Converter={conv:ObjectDumpConverter}}" Background="{StaticResource GrayBrush}"/>
+        </ScrollViewer>
+
+        <WrapPanel Grid.Row="1" Background="{StaticResource GrayBrush}">
+            <Button Margin="5" Content="Hangup" Command="{Binding HangupCallCommand}"/>
+        </WrapPanel>
+        
+
     </Grid>
 </c:UserControl>
