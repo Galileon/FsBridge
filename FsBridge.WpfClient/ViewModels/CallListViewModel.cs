@@ -23,7 +23,7 @@ namespace FsBridge.WpfClient.ViewModels
             get { return GetValue<CallModel>(SelectedCallProperty); }
             set { SetValue(SelectedCallProperty, value); }
         }
-        public static readonly IPropertyData SelectedCallProperty = RegisterProperty(nameof(SelectedCall),default(CallModel), (m,s) =>
+        public static readonly IPropertyData SelectedCallProperty = RegisterProperty(nameof(SelectedCall), default(CallModel), (m, s) =>
         {
         });
         public EventBase SelectedEvent
@@ -40,7 +40,14 @@ namespace FsBridge.WpfClient.ViewModels
             FsClient.OnStateChanged += FsClient_OnStateChanged;
             FsClient.OnChannelCallState += FsClient_OnChannelCallState;
             FsClient.Connect();
-            HangupCallCommand = new Command(() => { FsClient.HangupCall(SelectedCall.CallId); }, () => SelectedCall?.CallState == FsBridge.FsClient.Protocol.FsCallState.Active || SelectedCall?.CallState == FsBridge.FsClient.Protocol.FsCallState.Held);
+            HangupCallCommand = new Command(() =>
+            {
+                FsClient.HangupCall(SelectedCall.CallId, FsBridge.FsClient.Protocol.FsEventCause.NORMAL_CLEARING,
+                (response) =>
+                {
+                    
+                });
+            }, () => SelectedCall?.CallState != FsBridge.FsClient.Protocol.FsCallState.Hangup && SelectedCall?.CallState != FsBridge.FsClient.Protocol.FsCallState.Disconnected);
 
         }
 
@@ -64,7 +71,6 @@ namespace FsBridge.WpfClient.ViewModels
         {
 
         }
-
 
         public Command HangupCallCommand { get; private set; }
 

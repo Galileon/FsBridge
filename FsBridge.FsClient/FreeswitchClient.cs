@@ -16,7 +16,7 @@ namespace FsBridge.FsClient
         public FreeswitchConfiguration Configuration { get; private set; }
         internal ILogger _log;
         private EventSocketClient _eClient;
-        private MultiActionInvoker _invoker = new MultiActionInvoker();
+        private MultiActionInvoker<object> _invoker = new MultiActionInvoker<object>();
         public event OnChannelCallStateEventDelegate OnChannelCallState;
         public event OnStateChangedDelegate OnStateChanged;
         public Protocol.EventSocketClientState State { get => _eClient?.State ?? Protocol.EventSocketClientState.Closed; }
@@ -27,7 +27,14 @@ namespace FsBridge.FsClient
             _eClient = new EventSocketClient(config.Address, config.Port, config.Password);
             _eClient.OnEvent += _eClient_OnEvent;
             _eClient.OnStateChanged += _eClient_OnStateChanged;
+            _eClient.OnCommandReply += _eClient_OnCommandReply;
         }
+
+        private void _eClient_OnCommandReply(EventSocketClient client, Action<CommandReply> action, CommandReply parameter)
+        {
+            _invoker.Invoke(Guid.Empty,action,parameter);
+        }
+
         private void _eClient_OnStateChanged(EventSocketClient client, Protocol.EventSocketClientState state, Protocol.EventSocketClientState previousState)
         {
             _invoker.Invoke(null, () => OnStateChanged?.Invoke(this, state, previousState));
@@ -37,7 +44,7 @@ namespace FsBridge.FsClient
             switch (evnt)
             {
                 case ChannelCallStateEvent ccse:
-                    if (OnChannelCallState != null &&  Configuration.Context.ToLower().Contains (ccse.CallerContext.ToLower())) _invoker.Invoke(ccse.ChannelCallUUID, () => OnChannelCallState (this, ccse));
+                    if (OnChannelCallState != null && Configuration.Context.ToLower().Contains(ccse.CallerContext.ToLower())) _invoker.Invoke(ccse.ChannelCallUUID, () => OnChannelCallState(this, ccse));
                     break;
             }
         }
@@ -50,9 +57,10 @@ namespace FsBridge.FsClient
             _invoker.Stop();
             _eClient?.Close();
         }
-
-
-        public bool HangupCall (Guid callId, FsEventCause cause = FsEventCause.NORMAL_CLEARING) => _eClient.SendCommand(new HangupCommand(callId,cause));
+        public bool HangupCall(Guid callId, FsEventCause cause = FsEventCause.NORMAL_CLEARING, Action<CommandReply>? onReply = null)
+        {
+            return _eClient.SendCommand(new HangupCommand(callId, cause), callId, onReply);
+        }
 
     }
 }

@@ -19,6 +19,10 @@ namespace FsBridge.FsClient.Protocol.Commands
         public CommandReplyResult Result { get; set; }
         [JsonProperty("Job-UUID")]
         public Guid? JobUUID { get; set; }
+        /// <summary>
+        /// Added to pass parameter from EventSocket to multiinvoker
+        /// </summary>
+        public Guid? CallId { get; set; }
 
     }
 

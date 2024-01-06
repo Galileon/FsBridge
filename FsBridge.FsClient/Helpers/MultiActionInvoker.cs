@@ -8,21 +8,22 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace FsBridge.FsClient.Helpers
 {
-    public class MultiActionInvoker
+    public class MultiActionInvoker<T> where T : class
     {
         int _threadsCount;
         object _popLock = new object();
-        System.Collections.Concurrent.ConcurrentDictionary<int, BlockingCollection<Action>> _actions;
+        System.Collections.Concurrent.ConcurrentDictionary<int, BlockingCollection<InvokerParam<T>>> _actions;
         CancellationTokenSource _wantStop;
         public MultiActionInvoker()
         {
             _threadsCount = Math.Max(1, Environment.ProcessorCount / 2);
             _wantStop = new CancellationTokenSource();
-            _actions = new ConcurrentDictionary<int, BlockingCollection<Action>>();
-            for (int i = 0; i < _threadsCount; i++) _actions[i] = new BlockingCollection<Action>();
+            _actions = new ConcurrentDictionary<int, BlockingCollection<InvokerParam<T>>>();
+            for (int i = 0; i < _threadsCount; i++) _actions[i] = new BlockingCollection<InvokerParam<T>>();
             for (int workerId = 0; workerId < _threadsCount; workerId++)
             {
                 var localCopy = workerId;
@@ -40,7 +41,7 @@ namespace FsBridge.FsClient.Helpers
                     {
                         try
                         {
-                            item?.Invoke();
+                            item?.action.Invoke(item.parameter);
                         }
                         catch (Exception x)
                         {
@@ -60,8 +61,27 @@ namespace FsBridge.FsClient.Helpers
         }
         public void Invoke(Guid? key, Action action)
         {
-            var threadId = key.HasValue ? Math.Min(_threadsCount - 1, Convert.ToInt32(((float)key.Value.ToByteArray()[15] / byte.MaxValue) * _threadsCount)) : Random.Shared.Next (_threadsCount);
-            _actions[threadId].Add(action);
+            var threadId = key.HasValue ? Math.Min(_threadsCount - 1, Convert.ToInt32(((float)key.Value.ToByteArray()[15] / byte.MaxValue) * _threadsCount)) : Random.Shared.Next(_threadsCount);
+            _actions[threadId].Add(new InvokerParam<T>() { action = (c) => action() });
         }
+        public void Invoke(Guid? key, Action<T> action, T parameter = default(T))
+        {
+            var threadId = key.HasValue ? Math.Min(_threadsCount - 1, Convert.ToInt32(((float)key.Value.ToByteArray()[15] / byte.MaxValue) * _threadsCount)) : Random.Shared.Next(_threadsCount);
+            _actions[threadId].Add(new InvokerParam<T>() { action = action, parameter = parameter });
+        }
+
+        public void Invoke<M>(Guid? key, Action<M> action, M parameter)
+        {
+            var threadId = key.HasValue ? Math.Min(_threadsCount - 1, Convert.ToInt32(((float)key.Value.ToByteArray()[15] / byte.MaxValue) * _threadsCount)) : Random.Shared.Next(_threadsCount);
+            _actions[threadId].Add(new InvokerParam<T>() { action = (c) => { action(parameter); } });
+        }
+
     }
+
+    internal class InvokerParam<T> where T : class
+    { 
+        internal Action<T> action;
+        internal T parameter;
+    }
+
 }

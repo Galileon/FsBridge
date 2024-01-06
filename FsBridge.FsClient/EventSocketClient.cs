@@ -21,8 +21,10 @@ namespace FsBridge.FsClient
 
         public delegate void OnStateChangedDelegate(EventSocketClient client, EventSocketClientState state, EventSocketClientState previousState);
         public delegate void OnEventDelegate(EventSocketClient client, EventBase evnt);
+        public delegate void OnCommandReplyDelegate(EventSocketClient client, Action<CommandReply> action, CommandReply reply);
         public event OnEventDelegate OnEvent;
         public event OnStateChangedDelegate OnStateChanged;
+        public event OnCommandReplyDelegate OnCommandReply;
         MessageParser _msgParser = new MessageParser();
         RequestResponsePool _requestPool = new RequestResponsePool();
         EventSocketClientState _state = EventSocketClientState.Closed;
@@ -164,21 +166,24 @@ namespace FsBridge.FsClient
                                 case EventType.ChannelHangupComplete:
                                     OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelHangupCompleteEvent>(msg));
                                     break;
-                                case EventType.PresenceIn:
-                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<PresenceInEvent>(msg));
-                                    break;
-                                case EventType.Custom:
-                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<CustomEvent>(msg));
-                                    break;
                                 case EventType.ChannelAnswer:
                                     OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelAnswerEvent>(msg));
                                     break;
                                 case EventType.ChannelPark:
                                     OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelParkEvent>(msg));
                                     break;
-                                case EventType.BackgroundJobEvent:
-                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<BackgroundJobEvent>(msg));
+                                case EventType.Custom:
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<CustomEvent>(msg));
                                     break;
+                                case EventType.BackgroundJobEvent:
+                                    var bjE = Newtonsoft.Json.JsonConvert.DeserializeObject<BackgroundJobEvent>(msg);
+                                    ProcessBackgroundJobEvent(bjE);
+                                    OnEvent?.Invoke(this, bjE);
+                                    break;
+                                case EventType.PresenceIn:
+                                    OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<PresenceInEvent>(msg));
+                                    break;
+
                                 default:
                                     ///Console.WriteLine("Uknown event!");
                                     break;
@@ -193,16 +198,19 @@ namespace FsBridge.FsClient
             }
             base.OnReceived(buffer, offset, size);
         }
+        private void ProcessBackgroundJobEvent(BackgroundJobEvent bjE)
+        {
+            if (_requestPool.RemoveRequest(bjE.JobUUID, out var _rec))
+            {
+                OnCommandReply?.Invoke(this, _rec.CallBack, new CommandReply() { JobUUID = bjE.JobUUID, CallId = _rec.CallId, Text = bjE.Body, Result = bjE.Body.Contains ("+OK") ? CommandReplyResult.Ok : CommandReplyResult.Failed });
+            }
+        }
         private void RaiseResponse(CommandReply commandReply)
         {
             if (_requestPool.RemoveRequest(commandReply.UUID.Value, out var _rec))
             {
-                //_invoker.Invoke(commandReply.UUID, () => ProcessResponse(commandReply));
+                OnCommandReply?.Invoke(this, _rec.CallBack, commandReply);
             }
-        }
-        private void ProcessResponse (CommandReply commandReply)
-        {
-
         }
         internal void SetClientState(EventSocketClientState state)
         {
@@ -213,18 +221,19 @@ namespace FsBridge.FsClient
                 OnStateChanged?.Invoke(this, state, prevState);
             }
         }
-        public bool SendCommand(CommandBase command)
+        public bool SendCommand(CommandBase command, Guid? callId = null, Action<CommandReply>? replyAction = null)
         {
             var cmd = command.EncodeCommand();
             _Trace("Snd", cmd);
-            _requestPool.AppendRequest(command.UUID, command.GetType());
+            _requestPool.AppendRequest(command.UUID, command.GetType(), callId, replyAction);
             if (!base.SendAsync(Encoding.UTF8.GetBytes(cmd)))
             {
                 _requestPool.RemoveRequest(command.UUID, out var entry);
                 if (entry.CallBack != null)
                 {
-
-                    return true;
+                    // TODO: CallBack invoke at the same thread
+                    entry.CallBack.Invoke(new CommandReply() { JobUUID = command.UUID, Result = CommandReplyResult.Failed, UUID = command.UUID, Text = "Unable to send request" });
+                    return false;
                 }
                 return false;
             }
