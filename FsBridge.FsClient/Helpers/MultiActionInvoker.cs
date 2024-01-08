@@ -73,7 +73,7 @@ namespace FsBridge.FsClient.Helpers
         public void Invoke<M>(Guid? key, Action<M> action, M parameter)
         {
             var threadId = key.HasValue ? Math.Min(_threadsCount - 1, Convert.ToInt32(((float)key.Value.ToByteArray()[15] / byte.MaxValue) * _threadsCount)) : Random.Shared.Next(_threadsCount);
-            _actions[threadId].Add(new InvokerParam<T>() { action = (c) => { action(parameter); } });
+            _actions[threadId].Add(new InvokerParam<T>() { action = (c) => { action(parameter); } }); // TODO: Check action to action cost
         }
 
     }

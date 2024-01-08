@@ -22,7 +22,7 @@
                     </Style>
                 </TextBlock.Style>
             </TextBlock>
-                
+            <Label Content="{Binding LastCommandResult}"/>
         </StackPanel>
     </Grid>
 </c:UserControl>

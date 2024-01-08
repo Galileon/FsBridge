@@ -1,6 +1,7 @@
 ﻿using Catel;
 using Catel.IoC;
 using Catel.Logging;
+using Catel.Messaging;
 using System.Configuration;
 using System.Data;
 using System.Windows;
@@ -14,7 +15,8 @@ namespace FsBridge.WpfClient
     {
         public App()
         {
-            ServiceLocator.Default.RegisterInstance<FsClient.FreeswitchClient>(new FsClient.FreeswitchClient(new FsClient.FreeswitchConfiguration() {  Context = "mediaproxy"}, null));
+            //MessageMediator.Default.
+            ServiceLocator.Default.RegisterInstance<FsClient.FreeswitchClient>(new FsClient.FreeswitchClient(new FsClient.FreeswitchConfiguration() {  Context = ""}, null));
         }
 
         protected override void OnExit(ExitEventArgs e)

@@ -44,7 +44,7 @@ namespace FsBridge.FsClient
             switch (evnt)
             {
                 case ChannelCallStateEvent ccse:
-                    if (OnChannelCallState != null && Configuration.Context.ToLower().Contains(ccse.CallerContext.ToLower())) _invoker.Invoke(ccse.ChannelCallUUID, () => OnChannelCallState(this, ccse));
+                    if (OnChannelCallState != null && (Configuration?.Context == "" || Configuration.Context.ToLower().Contains(ccse.CallerContext.ToLower()))) _invoker.Invoke(ccse.ChannelCallUUID, () => OnChannelCallState(this, ccse));
                     break;
             }
         }
@@ -61,6 +61,31 @@ namespace FsBridge.FsClient
         {
             return _eClient.SendCommand(new HangupCommand(callId, cause), callId, onReply);
         }
+        public bool AnswerCall(Guid callId, Action<CommandReply>? onReply = null)
+        {
+            return _eClient.SendCommand(new AnswerCommand (callId), callId, onReply);
+        }
+        public bool MakeCall(Guid callId, string destintionNumber, Action<CommandReply>? onReply = null)
+        {
+            var cmd = new MakeCallCommand()
+            {
+                CallId = callId,
+                CalledNumber = GetOriginatePhoneNumber (destintionNumber),
+                Context = "mediaproxy"//Configuration.Context
+            };
+
+            return _eClient.SendCommand(cmd, callId, onReply);
+        }
+
+        private string GetOriginatePhoneNumber(string calledNumber)
+        {
+            if (Configuration.IgnorePhoneNumberFormatting) return calledNumber;
+            var userCalling = !calledNumber.Contains("@") && !calledNumber.Contains("%");
+            var num = $"sofia/{Configuration.CallingProfile}/{calledNumber}";
+            if (userCalling) num = $"user/{calledNumber}";
+            return num;
+        }
+
 
     }
 }

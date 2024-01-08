@@ -19,5 +19,13 @@ namespace FsBridge.FsClient
         /// For debug/diagnose purposes we can dump all packets to file
         /// </summary>
         public string ConnectionDumpFilePath { get; set; }
+        /// <summary>
+        /// Lib will not use originate/bridge destination phone formatting
+        /// </summary>
+        public bool IgnorePhoneNumberFormatting { get; set; }
+        /// <summary>
+        /// Context used to makecalls from
+        /// </summary>
+        public string CallingProfile { get; set; } = "mediaproxy";
     }
 }

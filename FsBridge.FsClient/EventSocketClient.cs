@@ -13,8 +13,13 @@ using FsBridge.FsClient.Protocol.Events;
 using FsBridge.Helpers;
 using NetCoreServer;
 
+
 namespace FsBridge.FsClient
 {
+    /// <summary>
+    /// List of the commands
+    /// https://developer.signalwire.com/freeswitch/FreeSWITCH-Explained/Modules/mod_commands_1966741/
+    /// </summary>
     public class EventSocketClient : TcpClient
     {
         static string DumpFilePath = "d:\\fsbridgedump.txt";
@@ -202,7 +207,7 @@ namespace FsBridge.FsClient
         {
             if (_requestPool.RemoveRequest(bjE.JobUUID, out var _rec))
             {
-                OnCommandReply?.Invoke(this, _rec.CallBack, new CommandReply() { JobUUID = bjE.JobUUID, CallId = _rec.CallId, Text = bjE.Body, Result = bjE.Body.Contains ("+OK") ? CommandReplyResult.Ok : CommandReplyResult.Failed });
+                OnCommandReply?.Invoke(this, _rec.CallBack, new CommandReply() { JobUUID = bjE.JobUUID, CallId = _rec.CallId, Text = bjE.Body.TrimEnd ('\n'), Result = bjE.Body.Contains ("+OK") ? CommandReplyResult.Ok : CommandReplyResult.Failed });
             }
         }
         private void RaiseResponse(CommandReply commandReply)

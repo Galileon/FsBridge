@@ -1,6 +1,8 @@
-﻿using Catel.Collections;
+﻿using Catel;
+using Catel.Collections;
 using Catel.Data;
 using Catel.IoC;
+using Catel.Messaging;
 using Catel.MVVM;
 using FsBridge.FsClient.Protocol.Events;
 using FsBridge.WpfClient.Models;
@@ -15,42 +17,66 @@ namespace FsBridge.WpfClient.ViewModels
 {
     public class CallListViewModel : ViewModelBase
     {
-
         FsClient.FreeswitchClient FsClient { get; set; }
         public Catel.Collections.FastObservableCollection<CallModel> Calls { get; set; } = new Catel.Collections.FastObservableCollection<CallModel>();
         public CallModel SelectedCall
         {
-            get { return GetValue<CallModel>(SelectedCallProperty); }
-            set { SetValue(SelectedCallProperty, value); }
+            get => GetValue<CallModel>(SelectedCallProperty);
+            set => SetValue(SelectedCallProperty, value);
         }
-        public static readonly IPropertyData SelectedCallProperty = RegisterProperty(nameof(SelectedCall), default(CallModel), (m, s) =>
-        {
-        });
+        public static readonly IPropertyData SelectedCallProperty = RegisterProperty(nameof(SelectedCall), default(CallModel), (m, s) => { });
         public EventBase SelectedEvent
         {
-            get { return GetValue<EventBase>(SelectedEventProperty); }
-            set { SetValue(SelectedEventProperty, value); }
+            get => GetValue<EventBase>(SelectedEventProperty);
+            set => SetValue(SelectedEventProperty, value);
         }
         public static readonly IPropertyData SelectedEventProperty = RegisterProperty(nameof(SelectedEvent), default(EventBase));
-
-
+        
+        public MakeCallParams MakeCallProperties
+        {
+            get { return GetValue<MakeCallParams>(MakeCallPropertiesProperty); }
+            set { SetValue(MakeCallPropertiesProperty, value); }
+        }
+        public static readonly IPropertyData MakeCallPropertiesProperty = RegisterProperty(nameof(MakeCallProperties), () => new MakeCallParams() { Destination = "10001@10.10.10.200:61490" });
         public CallListViewModel(FsClient.FreeswitchClient fsClient) : base()
         {
+
+
             FsClient = fsClient;
             FsClient.OnStateChanged += FsClient_OnStateChanged;
             FsClient.OnChannelCallState += FsClient_OnChannelCallState;
             FsClient.Connect();
+
             HangupCallCommand = new Command(() =>
             {
                 FsClient.HangupCall(SelectedCall.CallId, FsBridge.FsClient.Protocol.FsEventCause.NORMAL_CLEARING,
                 (response) =>
                 {
-                    
+                    ServiceLocator.Default.ResolveType<IMessageMediator>()?.SendMessage<DebugMessage>(new DebugMessage() { Message = response.Text });
                 });
-            }, () => SelectedCall?.CallState != FsBridge.FsClient.Protocol.FsCallState.Hangup && SelectedCall?.CallState != FsBridge.FsClient.Protocol.FsCallState.Disconnected);
+            }, () => SelectedCall != null && SelectedCall?.CallState != FsBridge.FsClient.Protocol.FsCallState.Hangup && SelectedCall?.CallState != FsBridge.FsClient.Protocol.FsCallState.Disconnected);
+
+            AnswerCallCommand = new Command(() =>
+            {
+                FsClient.AnswerCall(SelectedCall.CallId,
+                (response) =>
+                {
+                    ServiceLocator.Default.ResolveType<IMessageMediator>()?.SendMessage<DebugMessage>(new DebugMessage() { Message = response.Text });
+                });
+            }, () => SelectedCall?.CallState == FsBridge.FsClient.Protocol.FsCallState.Ringing);
+            MakeCallCommand = new Command(() =>
+            {
+                //
+                //FsClient.MakeCall(Guid.NewGuid(), "10001@10.10.10.200:5070",
+                FsClient.MakeCall(Guid.NewGuid(), "10001@10.10.10.200:61490",
+                (response) =>
+                {
+                    ServiceLocator.Default.ResolveType<IMessageMediator>()?.SendMessage<DebugMessage>(new DebugMessage() { Message = response.Text });
+                });
+
+            }, () => fsClient.State == FsBridge.FsClient.Protocol.EventSocketClientState.Receiving);
 
         }
-
         private void FsClient_OnChannelCallState(FsClient.FreeswitchClient client, FsClient.Protocol.Events.ChannelCallStateEvent callState)
         {
             var cm = Calls.FirstOrDefault(c => c.CallId == callState.ChannelCallUUID);
@@ -60,7 +86,7 @@ namespace FsBridge.WpfClient.ViewModels
             }
             else
             {
-                cm = new CallModel() { CallId = callState.ChannelCallUUID, CallState = callState.ChannelCallState, Ani = callState.CallerANI, Dnis = callState.CallerDestinationNumber };
+                cm = new CallModel() { Context = callState.CallerContext, CallId = callState.ChannelCallUUID, CallState = callState.ChannelCallState, Ani = callState.CallerANI, Dnis = callState.CallerDestinationNumber };
                 Calls.Add(cm);
             }
 
@@ -69,10 +95,12 @@ namespace FsBridge.WpfClient.ViewModels
 
         private void FsClient_OnStateChanged(FsClient.FreeswitchClient client, FsClient.Protocol.EventSocketClientState state, FsClient.Protocol.EventSocketClientState previousState)
         {
-
+            base.ViewModelCommandManager.InvalidateCommands();
         }
 
         public Command HangupCallCommand { get; private set; }
+        public Command AnswerCallCommand { get; private set; }
+        public Command MakeCallCommand { get; private set; }
 
     }
 }
