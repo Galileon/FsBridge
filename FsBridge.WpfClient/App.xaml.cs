@@ -16,7 +16,7 @@ namespace FsBridge.WpfClient
         public App()
         {
             //MessageMediator.Default.
-            ServiceLocator.Default.RegisterInstance<FsClient.FreeswitchClient>(new FsClient.FreeswitchClient(new FsClient.FreeswitchConfiguration() {  Context = ""}, null));
+            ServiceLocator.Default.RegisterInstance<FsClient.FreeswitchClient>(new FsClient.FreeswitchClient(new FsClient.FreeswitchConfiguration() { Address = "10.10.10.200",  Context = ""}, null));
         }
 
         protected override void OnExit(ExitEventArgs e)

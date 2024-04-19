@@ -97,10 +97,12 @@ namespace FsBridge.FsClient
         }
         protected override void OnReceived(byte[] buffer, long offset, long size)
         {
-            _Trace("Receive", Encoding.UTF8.GetString(buffer, (int)offset, (int)size));
+
             _msgParser.Append(new ArraySegment<byte>(buffer, (int)offset, (int)size));
             while (_msgParser.ReadMessage(out var msg, out var msgType))
             {
+                _Trace("RCV", msg);
+
                 try
                 {
                     switch (msgType)
@@ -110,13 +112,11 @@ namespace FsBridge.FsClient
                             SendCommand(new AuthenticateCommand() { Password = _pass });
                             break;
                         case MessageType.CommandReply:
-
                             if (this._state == EventSocketClientState.Receiving)
                             {
                                 var commandReply = MessageParser.GetCommandReply(msg);
                                 if (commandReply.UUID.HasValue && commandReply.Result == CommandReplyResult.Failed) RaiseResponse(commandReply);
                             }
-
                             if (this._state == EventSocketClientState.Authenticating)
                             {
                                 var authResponse = MessageParser.GetCommandReply(msg);
@@ -124,6 +124,10 @@ namespace FsBridge.FsClient
                                 {
                                     SetClientState(EventSocketClientState.Settings);
                                     SendCommand(new EventCommand());
+                                }
+                                else
+                                {
+                                    SetClientState(EventSocketClientState.AuthenticationFailed);
                                 }
                             }
                             else
@@ -188,7 +192,6 @@ namespace FsBridge.FsClient
                                 case EventType.PresenceIn:
                                     OnEvent?.Invoke(this, Newtonsoft.Json.JsonConvert.DeserializeObject<PresenceInEvent>(msg));
                                     break;
-
                                 default:
                                     ///Console.WriteLine("Uknown event!");
                                     break;
@@ -207,7 +210,7 @@ namespace FsBridge.FsClient
         {
             if (_requestPool.RemoveRequest(bjE.JobUUID, out var _rec))
             {
-                OnCommandReply?.Invoke(this, _rec.CallBack, new CommandReply() { JobUUID = bjE.JobUUID, CallId = _rec.CallId, Text = bjE.Body.TrimEnd ('\n'), Result = bjE.Body.Contains ("+OK") ? CommandReplyResult.Ok : CommandReplyResult.Failed });
+                OnCommandReply?.Invoke(this, _rec.CallBack, new CommandReply() { JobUUID = bjE.JobUUID, CallId = _rec.CallId, Text = bjE.Body.TrimEnd('\n'), Result = bjE.Body.Contains("+OK") ? CommandReplyResult.Ok : CommandReplyResult.Failed });
             }
         }
         private void RaiseResponse(CommandReply commandReply)
@@ -229,7 +232,7 @@ namespace FsBridge.FsClient
         public bool SendCommand(CommandBase command, Guid? callId = null, Action<CommandReply>? replyAction = null)
         {
             var cmd = command.EncodeCommand();
-            _Trace("Snd", cmd);
+            _Trace("SND", cmd);
             _requestPool.AppendRequest(command.UUID, command.GetType(), callId, replyAction);
             if (!base.SendAsync(Encoding.UTF8.GetBytes(cmd)))
             {
@@ -247,8 +250,8 @@ namespace FsBridge.FsClient
         void _Trace(string operation, string msg)
         {
 #if DEBUG
-            File.AppendAllText(DumpFilePath, $"------------------------------------------------------------------------------------------- {Environment.NewLine}");
-            File.AppendAllText(DumpFilePath, $"{operation}{Environment.NewLine}{msg}");
+            File.AppendAllText(DumpFilePath, $"--- {operation} ------------------------------------------------------- {DateTime.UtcNow.ToString("HH:mm:ss::ffff")} --- {this.State} {Environment.NewLine}");
+            File.AppendAllText(DumpFilePath, $"{msg}{Environment.NewLine}");
 #endif
         }
     }

@@ -17,14 +17,19 @@
         </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        
-        <DataGrid IsReadOnly="True" ItemsSource="{Binding Calls}" SelectedItem="{Binding SelectedCall}" ColumnWidth="*"/>
 
-        <ListView ItemsSource="{Binding SelectedCall.Events}" Grid.Column="1" SelectedItem="{Binding SelectedEvent}" >
+        <WrapPanel Orientation="Horizontal">
+            <CheckBox IsChecked="{Binding AutoRemoveDisconnectedCalls}" Content="Auto remove hanguped calls"/>
+        </WrapPanel>
+        
+        <DataGrid IsReadOnly="True" ItemsSource="{Binding Calls}" SelectedItem="{Binding SelectedCall}" ColumnWidth="*" Grid.Row="1"/>
+
+        <ListView ItemsSource="{Binding SelectedCall.Events}" Grid.Column="1" SelectedItem="{Binding SelectedEvent}" Grid.RowSpan="2" >
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Vertical">
@@ -35,11 +40,11 @@
             </ListView.ItemTemplate>
         </ListView>
 
-        <ScrollViewer  Grid.Column="2">
+        <ScrollViewer  Grid.Column="2" Grid.RowSpan="2">
             <TextBlock Text="{Binding SelectedEvent,Converter={conv:ObjectDumpConverter}}" Background="{StaticResource GrayBrush}"/>
         </ScrollViewer>
 
-        <WrapPanel Grid.Row="1" >
+        <WrapPanel Grid.Row="2" >
             <WrapPanel Background="{StaticResource GrayBrush}">
                 <Button Margin="5" Content="Answer" Command="{Binding AnswerCallCommand}"/>
                 <Button Margin="5" Content="Hangup" Command="{Binding HangupCallCommand}"/>

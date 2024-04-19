@@ -86,8 +86,18 @@ namespace FsBridge.Helpers
                 contentLenght = Int32.Parse(MessageParser.GetStringParameter(messageParts[0]).Trim());
                 contentTypeIndex = 1; // For sized content it will be there 
             }
+
+            // On AuthResponse the content lenght can be with next message to the header
+            if (messageParts.Length > 1 && messageParts[1].StartsWith("Content-Length"))
+            {
+                contentLenght = Int32.Parse(MessageParser.GetStringParameter(messageParts[1]).Trim());
+                contentTypeIndex = 0; 
+            }
+
             if (messageParts[contentTypeIndex] == "Content-Type: auth/request") return MessageType.AuthRequest;
             if (messageParts[contentTypeIndex] == "Content-Type: command/reply") return MessageType.CommandReply;
+            if (messageParts[contentTypeIndex] == "Content-Type: text/disconnect-notice") return MessageType.Event;
+
             return MessageType.Event;
         }
         public static CommandReply GetCommandReply(string content)
@@ -117,7 +127,7 @@ namespace FsBridge.Helpers
         {
             msgType = MessageType.Event;
             msg = string.Empty;
-
+            //var bbb = Encoding.UTF8.GetString(_receiveBuffer.Data);
             if (_receiveBuffer.Size == 0) return false;
             if (!BufferHelper.HasCompletedSegment(_lastSegment)) return false;
             if (!BufferHelper.FetchMessageSegment(_receiveBuffer, _expectedSegmentSize, out msg)) return false;

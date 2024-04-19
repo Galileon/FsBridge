@@ -34,7 +34,6 @@ namespace FsBridge.FsClient.Helpers
         {
             try
             {
-
                 while (!_wantStop.Token.WaitHandle.WaitOne(10))
                 {
                     while (_actions[workerId].TryTake(out var item, 1000, _wantStop.Token))
@@ -51,7 +50,7 @@ namespace FsBridge.FsClient.Helpers
             }
             catch (Exception c)
             {
-                // operationc cancelled 
+                // operation cancelled 
             }
         }
 

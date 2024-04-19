@@ -29,16 +29,8 @@ namespace FsBridge.FsClient
             _eClient.OnStateChanged += _eClient_OnStateChanged;
             _eClient.OnCommandReply += _eClient_OnCommandReply;
         }
-
-        private void _eClient_OnCommandReply(EventSocketClient client, Action<CommandReply> action, CommandReply parameter)
-        {
-            _invoker.Invoke(Guid.Empty,action,parameter);
-        }
-
-        private void _eClient_OnStateChanged(EventSocketClient client, Protocol.EventSocketClientState state, Protocol.EventSocketClientState previousState)
-        {
-            _invoker.Invoke(null, () => OnStateChanged?.Invoke(this, state, previousState));
-        }
+        private void _eClient_OnCommandReply(EventSocketClient client, Action<CommandReply> action, CommandReply parameter) => _invoker.Invoke(Guid.Empty, action, parameter);
+        private void _eClient_OnStateChanged(EventSocketClient client, Protocol.EventSocketClientState state, Protocol.EventSocketClientState previousState) => _invoker.Invoke(null, () => OnStateChanged?.Invoke(this, state, previousState));
         private void _eClient_OnEvent(EventSocketClient client, Protocol.Events.EventBase evnt)
         {
             switch (evnt)
@@ -63,20 +55,19 @@ namespace FsBridge.FsClient
         }
         public bool AnswerCall(Guid callId, Action<CommandReply>? onReply = null)
         {
-            return _eClient.SendCommand(new AnswerCommand (callId), callId, onReply);
+            return _eClient.SendCommand(new AnswerCommand(callId), callId, onReply);
         }
         public bool MakeCall(Guid callId, string destintionNumber, Action<CommandReply>? onReply = null)
         {
             var cmd = new MakeCallCommand()
             {
                 CallId = callId,
-                CalledNumber = GetOriginatePhoneNumber (destintionNumber),
+                CalledNumber = GetOriginatePhoneNumber(destintionNumber),
                 Context = "mediaproxy"//Configuration.Context
             };
 
             return _eClient.SendCommand(cmd, callId, onReply);
         }
-
         private string GetOriginatePhoneNumber(string calledNumber)
         {
             if (Configuration.IgnorePhoneNumberFormatting) return calledNumber;
@@ -85,7 +76,5 @@ namespace FsBridge.FsClient
             if (userCalling) num = $"user/{calledNumber}";
             return num;
         }
-
-
     }
 }

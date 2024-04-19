@@ -9,9 +9,11 @@ using FsBridge.WpfClient.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Navigation;
+using System.Windows.Threading;
 
 namespace FsBridge.WpfClient.ViewModels
 {
@@ -31,7 +33,7 @@ namespace FsBridge.WpfClient.ViewModels
             set => SetValue(SelectedEventProperty, value);
         }
         public static readonly IPropertyData SelectedEventProperty = RegisterProperty(nameof(SelectedEvent), default(EventBase));
-        
+        public bool AutoRemoveDisconnectedCalls { get; set; } = true;
         public MakeCallParams MakeCallProperties
         {
             get { return GetValue<MakeCallParams>(MakeCallPropertiesProperty); }
@@ -40,12 +42,11 @@ namespace FsBridge.WpfClient.ViewModels
         public static readonly IPropertyData MakeCallPropertiesProperty = RegisterProperty(nameof(MakeCallProperties), () => new MakeCallParams() { Destination = "10001@10.10.10.200:61490" });
         public CallListViewModel(FsClient.FreeswitchClient fsClient) : base()
         {
-
-
             FsClient = fsClient;
             FsClient.OnStateChanged += FsClient_OnStateChanged;
             FsClient.OnChannelCallState += FsClient_OnChannelCallState;
             FsClient.Connect();
+            new DispatcherTimer(TimeSpan.FromSeconds (2),  DispatcherPriority.DataBind, (s,r) => { if (this.AutoRemoveDisconnectedCalls) this.Calls.RemoveItems(this.Calls.Where(c => c.CallState == FsBridge.FsClient.Protocol.FsCallState.Hangup && DateTime.UtcNow - c.StateChangedOn > TimeSpan.FromSeconds(5)).ToArray()); }, Dispatcher.CurrentDispatcher).Start();
 
             HangupCallCommand = new Command(() =>
             {
@@ -71,7 +72,7 @@ namespace FsBridge.WpfClient.ViewModels
                 FsClient.MakeCall(Guid.NewGuid(), "10001@10.10.10.200:61490",
                 (response) =>
                 {
-                    ServiceLocator.Default.ResolveType<IMessageMediator>()?.SendMessage<DebugMessage>(new DebugMessage() { Message = response.Text });
+                    ServiceLocator.Default.ResolveType<IMessageMediator>()?.SendMessage<DebugMessage>(new DebugMessage() {  Message = $"{response.Text} {response.Result}" });
                 });
 
             }, () => fsClient.State == FsBridge.FsClient.Protocol.EventSocketClientState.Receiving);
@@ -91,13 +92,13 @@ namespace FsBridge.WpfClient.ViewModels
             }
 
             cm.Events.Add(callState);
+            Console.WriteLine(callState.ToString());
         }
-
         private void FsClient_OnStateChanged(FsClient.FreeswitchClient client, FsClient.Protocol.EventSocketClientState state, FsClient.Protocol.EventSocketClientState previousState)
         {
+            var s = state;
             base.ViewModelCommandManager.InvalidateCommands();
         }
-
         public Command HangupCallCommand { get; private set; }
         public Command AnswerCallCommand { get; private set; }
         public Command MakeCallCommand { get; private set; }

@@ -11,12 +11,13 @@ namespace FsBridge.WpfClient.Models
     {
         public Guid CallId { get; set; }
         public string Context { get; set; }
+        public DateTime? StateChangedOn { get; private set; }
         public FsClient.Protocol.FsCallState CallState
         {
             get => GetValue<FsClient.Protocol.FsCallState>(CallStateProperty);
             set => SetValue(CallStateProperty, value);
         }
-        public static readonly IPropertyData CallStateProperty = RegisterProperty(nameof(CallState), () => FsClient.Protocol.FsCallState.Disconnected);
+        public static readonly IPropertyData CallStateProperty = RegisterProperty(nameof(CallState), () => FsClient.Protocol.FsCallState.Disconnected, (c,s) => { (c as CallModel).StateChangedOn = DateTime.UtcNow; });
         public string Ani
         {
             get => GetValue<string>(AniProperty);
